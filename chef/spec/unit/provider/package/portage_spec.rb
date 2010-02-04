@@ -176,3 +176,23 @@ describe Chef::Provider::Package::Portage, "remove_package" do
   end
 end
 
+describe Chef::Provider::Package::Portage, "short package names" do
+  before(:each) do
+    @node = mock("Chef::Node", :null_object => true)
+    @new_resource = mock("Chef::Resource::Package",
+      :null_object => true,
+      :name => "git",
+      :version => nil,
+      :package_name => "git",
+      :updated => nil,
+      :options => nil
+    )
+    @provider = Chef::Provider::Package::Portage.new(@node, @new_resource)
+  end
+
+  it "should log a warning on load_current_resource" do
+    Chef::Log.should_receive(:info).with("Package name 'git' does not include a category!")
+
+    @provider.load_current_resource
+  end
+end

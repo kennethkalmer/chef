@@ -32,6 +32,10 @@ class Chef
           category = @new_resource.package_name.split('/').first
           pkg = @new_resource.package_name.split('/').last
 
+          if category == pkg
+            Chef::Log.info("Package name '#{pkg}' does not include a category!")
+          end
+
           @current_resource.version(nil)
 
           catdir = "/var/db/pkg/#{category}"
