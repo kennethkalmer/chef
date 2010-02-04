@@ -192,7 +192,26 @@ describe Chef::Provider::Package::Portage, "short package names" do
 
   it "should log a warning on load_current_resource" do
     Chef::Log.should_receive(:info).with("Package name 'git' does not include a category!")
+    ::Dir.stub!(:entries).and_return([])
 
     @provider.load_current_resource
+  end
+
+  it "should resolve the category if only on category was found" do
+    ::File.stub!(:exists?).and_return(true)
+    ::Dir.stub!(:entries).and_return(['dev-util'], ['git-1.6.3.3'])
+    #Chef::Log.should_receive(:info).once.with("Infered 'dev-util' as category name for 'git'")
+
+    @provider.load_current_resource
+    @provider.current_resource.package_name.should == "dev-util/git"
+  end
+
+  it "should not resolve the category if multiple entries were found" do
+    ::File.stub!(:exists?).and_return(true)
+    ::Dir.stub!(:entries).and_return(['dev-util', 'app-admin'], ['git-1.6.3.3'], ['git-0.9.9'])
+    #Chef::Log.should_receive(:info).once.with("Possible categories for 'git' can be dev-util, app-admin. Not changing package name")
+
+    @provider.load_current_resource
+    @provider.current_resource.package_name.should == "git"
   end
 end

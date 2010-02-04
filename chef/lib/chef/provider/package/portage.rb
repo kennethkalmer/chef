@@ -34,6 +34,25 @@ class Chef
 
           if category == pkg
             Chef::Log.info("Package name '#{pkg}' does not include a category!")
+
+            possible_categories = []
+            Dir.entries("/var/db/pkg").each do |cat|
+              Dir.entries("/var/db/pkg/#{cat}").each do |entry|
+                if(entry =~ /^#{Regexp.escape(pkg)}\-(\d[\.\d]*((_(alpha|beta|pre|rc|p)\d*)*)?(-r\d+)?)/)
+                  possible_categories << cat
+                  break
+                end
+              end
+            end
+
+            if possible_categories.size == 1
+              category = possible_categories.shift
+              Chef::Log.info("Infered '#{category}' as category for '#{pkg}'")
+              @new_resource.package_name([ category, pkg ].join('/'))
+              @current_resource.package_name([ category, pkg ].join('/'))
+            elsif possible_categories.size > 1
+              Chef::Log.info("Possible categories for '#{pkg}' can be #{possible_categories.join(', ')}. Not changing package name")
+            end
           end
 
           @current_resource.version(nil)
